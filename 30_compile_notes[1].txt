@@ -1,0 +1,6 @@
+Build notes:
+1. Keep all 30 files in one folder.
+2. Compile every .cpp file together.
+3. Use C++17 or newer.
+4. Windows uses the console helper automatically.
+5. Test service display/search/add, road updates and Dijkstra routing after compilation.

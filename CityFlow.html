@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityFlow — Interactive Smart City Demo</title>
+<style>
+:root{--ink:#172b27;--muted:#65736f;--green:#174d43;--mint:#e4eee7;--paper:#f5f6f1;--line:#dfe5de;--gold:#e6b84f}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}.sidebar{background:#fff;border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;gap:24px}.brand{font-weight:800;font-size:22px;letter-spacing:-.6px}.brand small{display:block;font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px}.nav button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:13px 12px;border-radius:12px;margin:4px 0;color:#42514d;cursor:pointer;font-size:14px}.nav button.active,.nav button:hover{background:var(--mint);color:var(--green);font-weight:700}.main{padding:28px;max-width:1400px;width:100%;margin:auto}.hero{background:linear-gradient(115deg,#103f38,#0b5c50);color:white;border-radius:22px;padding:28px 32px;display:flex;justify-content:space-between;align-items:center;gap:20px;overflow:hidden}.hero h1{font-size:clamp(28px,4vw,42px);line-height:1.05;max-width:470px;margin:8px 0 12px;letter-spacing:-1.5px}.hero p{color:#d3e7dd;max-width:510px;line-height:1.5}.hero-art{font-size:78px;opacity:.95}.eyebrow{font-size:10px;letter-spacing:2px;font-weight:800;color:var(--muted);text-transform:uppercase}.hero .eyebrow{color:#b8d8ca}.btn{border:0;border-radius:10px;padding:11px 15px;background:#eaf2e7;color:#153e35;font-weight:750;cursor:pointer}.btn.primary{background:var(--green);color:white}.btn:hover{filter:brightness(.96)}.section{margin-top:24px}.section h2{font-size:24px;letter-spacing:-.6px;margin:6px 0 16px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card,.stat{background:white;border:1px solid var(--line);border-radius:16px;padding:18px}.stat span{font-size:12px;color:var(--muted)}.stat strong{display:block;font-size:30px;margin:10px 0 4px}.stat small{color:var(--muted)}.quick{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-top:18px}.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.tile{background:#fbfcf9;border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:left;cursor:pointer}.tile:hover{background:var(--mint);border-color:#b9d0c2}.tile b{display:block;margin:10px 0 4px}.tile small{color:var(--muted)}.green-card{background:#e7efe7}.hidden{display:none!important}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.select,input{border:1px solid #cfd9d1;border-radius:10px;padding:11px 12px;background:white;color:var(--ink);min-width:160px}.service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.service-photo{width:100%;height:170px;object-fit:cover;border-radius:12px;display:block;background:#e9efeb}
+.service-photo-wrap{margin:-2px -2px 12px;position:relative}
+.photo-label{font-size:10px;color:var(--muted);margin-top:5px}
+.service-photo-wrap .photo-label{padding:0 2px}
+.service-card h3{margin:8px 0}.badge{display:inline-block;border-radius:20px;padding:5px 9px;background:var(--mint);color:#245648;font-size:11px;font-weight:700}.muted{color:var(--muted);font-size:13px;line-height:1.5}.meta{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;color:#53635d;font-size:12px}.result{background:#edf5ef;border:1px solid #c9ded0;border-radius:12px;padding:16px;margin-top:14px;line-height:1.7}.road-row{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.notice{font-size:12px;color:var(--muted);margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted);background:white;border:1px dashed #cbd6ce;border-radius:14px}
+@media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{padding:12px 16px;gap:10px}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap;width:auto}.main{padding:16px}.hero-art{display:none}.stats{grid-template-columns:repeat(2,1fr)}.quick{grid-template-columns:1fr}.service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.service-grid{grid-template-columns:1fr}.road-row{grid-template-columns:1fr 1fr}.hero{padding:22px}.stats{gap:8px}.stat{padding:12px}}
+
+.route-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
+.route-option{border:1px solid var(--line,#dfe5e8);border-radius:16px;padding:16px;background:var(--surface,#fff)}
+.route-option.recommended{border:2px solid #16835f;background:#f0fbf6}
+.route-option h4{margin:8px 0 6px;font-size:1.05rem}
+.route-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.route-metric{background:rgba(120,130,140,.08);padding:9px;border-radius:9px}
+.route-metric small{display:block;color:#64748b;margin-bottom:3px}
+.route-tag{display:inline-block;border-radius:99px;padding:5px 9px;font-size:.78rem;font-weight:700;background:#edf2f7;color:#334155}
+.route-tag.best{background:#d1fae5;color:#065f46}
+.route-bar{height:7px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:7px 0 12px}
+.route-bar span{display:block;height:100%;border-radius:99px;background:#16a34a}
+
+
+.emergency-panel{margin-top:16px;border-left:4px solid #b91c1c}
+.service-detail{margin-top:16px;background:#f8fbf8}
+.service-detail .detail-row{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.contact-item{background:#f5f8f5;border:1px solid var(--line);border-radius:11px;padding:11px}.contact-item b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}.contact-item a{color:var(--green);font-weight:700;text-decoration:none}.contact-note{font-size:11px;color:var(--muted);margin-top:10px}@media(max-width:520px){.contact-grid{grid-template-columns:1fr}}
+.status-card{background:#fff}
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.mini-stats div{background:#f5f8f5;border-radius:10px;padding:12px}
+.mini-stats b{display:block;font-size:24px}
+.mini-stats span{font-size:11px;color:var(--muted)}
+.route-explainer{margin-bottom:14px}
+.formula{margin-top:12px;background:#173f38;color:white;border-radius:10px;padding:12px;font-family:Consolas,monospace;font-size:13px}
+.route-diagram{display:flex;align-items:center;gap:8px;margin-top:14px;overflow:auto;padding:8px 0}
+.node{border:1px solid #b8cfc1;border-radius:999px;padding:8px 12px;background:#eef7f0;font-weight:700;font-size:11px;white-space:nowrap}
+.line{height:4px;min-width:55px;border-radius:99px;background:#9fb8aa}
+.line.good{background:#23835b}
+.line.alt{background:#d4a63b}
+.emergency-panel .service-card{border-color:#e6caca}
+@media(max-width:520px){.mini-stats{grid-template-columns:1fr}.service-detail .detail-row{grid-template-columns:1fr}}
+
+.photo-hero{
+  position:relative;
+  min-height:430px;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-end;
+  border-radius:18px;
+  background-image:linear-gradient(90deg,rgba(8,25,22,.82) 0%,rgba(8,25,22,.62) 42%,rgba(8,25,22,.18) 100%),var(--hero-image);
+  background-size:cover;
+  background-position:center;
+  box-shadow:0 18px 50px rgba(0,0,0,.12);
+}
+.photo-hero::after{
+  content:"";
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,rgba(5,20,18,.58),transparent 55%);
+  pointer-events:none;
+}
+.photo-hero .hero-content{
+  position:relative;z-index:2;
+  max-width:700px;
+  padding:48px;
+  color:#fff;
+}
+.photo-hero h1{color:#fff;margin:8px 0 14px;font-size:clamp(38px,5vw,68px);line-height:1.02}
+.photo-hero p{color:rgba(255,255,255,.88);max-width:600px;font-size:16px}
+.photo-hero .eyebrow{color:#d7f5e5}
+.home-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px}
+.home-city-select{min-width:150px;background:rgba(255,255,255,.94);color:#173f38;border-color:rgba(255,255,255,.8)}
+.photo-credit{display:block;margin-top:16px;color:rgba(255,255,255,.7);font-size:11px}
+@media(max-width:700px){
+  .photo-hero{min-height:500px;background-position:center}
+  .photo-hero .hero-content{padding:28px}
+}
+
+.service-submit-panel{margin-top:18px;border-left:4px solid #1f7a59}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.input,.verification-check{font:inherit}
+.input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.verification-check{display:flex;gap:9px;align-items:flex-start;margin:12px 0;color:#334}
+.service-submit-panel .btn{margin-top:4px}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}}
+.direction-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}.direction-list li{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.step-number{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-weight:800}.route-directions{border-top:1px solid var(--line);padding-top:14px}.route-directions h3{font-size:18px}
+.service-gallery{display:grid;grid-template-columns:1.65fr 1fr 1fr;gap:6px;margin:-2px -2px 10px}
+.service-gallery img{width:100%;height:78px;object-fit:cover;border-radius:9px;display:block;background:#e9efeb}
+.service-gallery img:first-child{height:170px;grid-row:span 2}
+.service-gallery-detail{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 8px}
+.service-gallery-detail img{width:100%;height:105px;object-fit:cover;border-radius:10px;display:block;background:#e9efeb}
+@media(max-width:520px){
+  .service-gallery{grid-template-columns:1fr 1fr}
+  .service-gallery img:first-child{height:145px;grid-column:span 2;grid-row:auto}
+  .service-gallery img{height:90px}
+  .service-gallery-detail{grid-template-columns:1fr 1fr}
+}
+
+</style>
+
+<style>
+#homeHero {
+  background-image: linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,.42)), var(--hero-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  transition: background-image .35s ease;
+}
+</style>
+
+<style>
+.form-note{margin:-4px 0 16px;color:#667085;font-size:13px}
+#submitServiceCity{background:#f5f7fa;color:#475467;cursor:not-allowed}
+#page-add-service .form-grid label{display:flex;flex-direction:column;gap:7px}
+#page-add-service .form-grid input,
+#page-add-service .form-grid select{width:100%;box-sizing:border-box}
+</style>
+
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+<div class="brand">◈ CityFlow<small>SMART CITY PLATFORM</small></div>
+<div class="nav">
+<button class="active" data-page="overview">▦ &nbsp; Overview</button>
+<button data-page="services">⌕ &nbsp; City services</button>
+        <button class="nav-item" type="button" data-page="add-service" id="navAddService">
+          <span class="nav-icon">＋</span>
+          <span>Add New Service</span>
+        </button>
+
+<button data-page="routes">↗ &nbsp; Route planner</button>
+<button data-page="roads">━ &nbsp; Road management</button>
+</div>
+</aside>
+<main class="main">
+<section id="overview" class="page">
+<div id="homeHero" class="hero photo-hero" style="--hero-image:url('https://images.unsplash.com/photo-1743136648410-a73d5c9dbaab?auto=format&fit=crop&w=2200&q=82')">
+  <div class="hero-content">
+    <div class="eyebrow">Connected city services</div>
+    <h1>Find your way around <span id="homeCityName">Delhi</span>.</h1>
+    <p>Explore essential services, compare routes, and find useful places across multiple cities in one place.</p>
+    <div class="home-actions">
+      <select id="homeCitySelect" class="select home-city-select" aria-label="Choose home city" >
+        <option>Delhi</option><option>Mumbai</option><option>Gurugram</option><option>Dehradun</option><option>Noida</option>
+      </select>
+      <button class="btn" onclick="showPage('routes')">Plan a route ↗</button>
+    </div>
+    <small class="photo-credit">Photo background: Unsplash</small>
+  </div>
+</div>
+<div class="section"><div class="eyebrow">At a glance</div><h2>City overview</h2>
+<div class="stats"><div class="stat"><span>Registered services</span><strong id="statServices">—</strong><small>Across the selected demo directory</small></div><div class="stat"><span>Available cities</span><strong>5</strong><small>Choose a city below</small></div><div class="stat"><span>Service categories</span><strong id="statCategories">—</strong><small>Public and private</small></div><div class="stat"><span>Route options</span><strong>3</strong><small>Compared before recommendation</small></div></div></div>
+<div class="quick"><div class="card"><div class="eyebrow">Quick access</div><h2>Explore services</h2><div class="tiles">
+<button class="tile" onclick="openCategory('Healthcare')">✚<b>Healthcare</b><small>Hospitals & clinics</small></button>
+<button class="tile" onclick="openCategory('Cafe')">☕<b>Cafes</b><small>Coffee & food</small></button>
+<button class="tile" onclick="openCategory('Education')">▤<b>Education</b><small>Schools & colleges</small></button>
+<button class="tile" onclick="openCategory('Park')">🌳<b>Parks</b><small>Green spaces</small></button>
+<button class="tile" onclick="openCategory('Transport')">↗<b>Stations</b><small>Rail & metro</small></button>
+<button class="tile" onclick="openCategory('Office')">▣<b>Offices</b><small>Public offices</small></button>
+<button class="tile" onclick="openCategory('Police Station')">⚑<b>Police stations</b><small>Public safety</small></button>
+<button class="tile" onclick="openCategory('Fire Station')">♨<b>Fire stations</b><small>Emergency services</small></button>
+<button class="tile" onclick="openEmergency()">🚨<b>Emergency services</b><small>Police, fire & hospitals</small></button>
+<button class="tile" onclick="openCategory('Shopping')">▦<b>Shopping</b><small>Markets & malls</small></button>
+<button class="tile" onclick="openCategory('Recreation')">◎<b>Recreation</b><small>Things to explore</small></button></div></div>
+<div class="card status-card">
+  <div class="eyebrow">Network status</div>
+  <h2>Road conditions</h2>
+  <div class="mini-stats">
+    <div><b id="dashOpenRoads">—</b><span>Open roads</span></div>
+    <div><b id="dashHighTraffic">—</b><span>High traffic</span></div>
+    <div><b id="dashClosedRoads">—</b><span>Closed roads</span></div>
+  </div>
+</div>
+<div class="card green-card"><div class="eyebrow">Smart navigation</div><h2>Not just the shortest. Find a better route.</h2><p class="muted">Compare distance with traffic and road quality using a demonstration route score.</p><button class="btn" onclick="showPage('routes')">Open route planner →</button></div></div>
+</section>
+<section id="services" class="page hidden">
+<div class="eyebrow">Explore nearby essentials</div><h2>City services</h2><p class="muted">Select a city and service category to see the available services for that city. Open any service to view its available details.</p>
+<div class="controls"><select id="citySelect" class="select" aria-label="Choose city" ><option>Delhi</option><option>Mumbai</option><option>Gurugram</option><option>Dehradun</option><option>Noida</option></select><select id="categorySelect" class="select" aria-label="Choose service category"></select><input id="searchInput" placeholder="Search services..." ></div>
+<div id="servicesHeading" class="muted"></div><div id="serviceGrid" class="service-grid"></div>
+<div id="serviceDetail" class="card service-detail hidden"></div>
+
+<div id="emergencyPanel" class="card emergency-panel hidden">
+  <div class="eyebrow">Emergency mode</div>
+  <h3>Emergency services in <span id="emergencyCityLabel"></span></h3>
+  <p class="muted">Shows hospitals, police stations and fire stations together so they can be checked quickly.</p>
+  <div id="emergencyGrid" class="service-grid"></div>
+</div>
+<div class="notice">Directory entries are demonstration data. Check official provider websites for current contact details and availability.</div>
+</section>
+<section id="routes" class="page hidden">
+<div class="eyebrow">Smart navigation</div><h2>Route planner</h2><p class="muted">CityFlow first chooses a route using distance, traffic and road condition, then explains the route step-by-step. Google Maps is optional for external live navigation.</p>
+<div class="controls">
+<select id="routeCity" class="select" ><option>Delhi</option><option>Mumbai</option><option>Gurugram</option><option>Dehradun</option><option>Noida</option></select>
+<select id="routeFrom" class="select"></select>
+<select id="routeTo" class="select"></select>
+<select id="routeMode" class="select" >
+<option value="balanced">Best overall</option>
+<option value="fastest">Fastest</option>
+<option value="shortest">Shortest distance</option>
+<option value="traffic">Avoid traffic</option>
+<option value="condition">Best road condition</option>
+</select>
+<button class="btn primary" onclick="planRoute()">Show all routes</button>
+</div>
+<div class="card route-explainer">
+  <div class="eyebrow">How CityFlow decides</div>
+  <h3>Best route ≠ shortest route</h3>
+  <p class="muted">The planner compares distance, traffic and road condition. A slightly longer road can be recommended when it is clearer or in better condition. After comparison, you can open the same trip in Google Maps for live navigation.</p>
+  <div class="formula">Score = Distance × 4 + Traffic penalty + Road-condition penalty</div>
+  <div class="route-diagram" aria-label="Illustrative route comparison">
+    <div class="node">START</div><div class="line good"></div><div class="node">A</div>
+    <div class="line alt"></div><div class="node">DESTINATION</div>
+  </div>
+</div>
+<div id="routeResult" class="card"><h3>Your route comparison will appear here</h3><p class="muted">Choose a city, start and destination, then compare all three demo route options.</p></div>
+</section>
+<section id="roads" class="page hidden">
+<div class="eyebrow">Network information</div><h2>Road management</h2>
+<p class="muted"><b>Public road reporting:</b> anyone can submit a traffic, road-condition or closure update. No document verification is required for road reports.</p>
+<div class="controls"><select id="roadCity" class="select" ><option>Delhi</option><option>Mumbai</option><option>Gurugram</option><option>Dehradun</option><option>Noida</option></select></div>
+<div id="roadSummary" class="stats" style="margin-bottom:14px"></div>
+<div id="roadsList" class="card"></div>
+<div class="notice">Changes are stored only in this browser session. They are demonstration values, not live road feeds.</div>
+</section>
+<section id="add-service" class="page hidden">
+  <div class="page-header">
+    <div>
+      <h1>Add New Service</h1>
+      <p>Submit a new city service for verification.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Service Verification Form</h2>
+    <p class="form-note">Fields marked with * are required. The uploaded document is used for verification and the service is not published automatically.</p>
+    <p class="muted">New services are reviewed before they appear in the public directory.</p>
+    <div class="form-grid">
+      <label>Service Name *<input id="submitServiceName" required type="text" placeholder="e.g. ABC Fitness"></label>
+      <label>Category
+        <select id="submitServiceCategory">
+          <option>Gym</option><option>Salon</option><option>Swimming Pool</option>
+          <option>Cafe</option><option>Mall</option><option>Hospital</option>
+          <option>Police Station</option><option>Fire Station</option><option>Other</option>
+        </select>
+      </label>
+      <label>City<input id="submitServiceCity" type="text" placeholder="Selected city" readonly></label>
+      <label>Area / Address *<input id="submitServiceArea" required type="text" placeholder="Full address"></label>
+      <label>Applicant Contact *<input id="submitServiceContact" required type="tel" placeholder="Phone number"></label>
+      <label>Email *<input id="submitServiceEmail" required type="email" placeholder="Email address"></label>
+      <label>Opening Hours *<input id="submitServiceHours" required type="text" placeholder="e.g. 9 AM - 9 PM"></label>
+      <label>Working Days *<input id="submitServiceDays" required type="text" placeholder="e.g. Monday - Sunday"></label>
+      <label>Document Type
+        <select id="submitDocumentType">
+          <option>Registration Certificate</option>
+          <option>Business License</option>
+          <option>Government ID / Authorization</option>
+          <option>Other</option>
+        </select>
+      </label>
+      <label>Document File *<input id="submitDocument" required type="file" accept=".pdf,.jpg,.jpeg,.png"></label>
+    </div>
+    <label class="check-row">
+      <input id="documentDeclaration" type="checkbox">
+      <span>I confirm that the information and uploaded document are genuine and accurate.</span>
+    </label>
+    <button class="primary-btn" type="button" onclick="submitServiceForVerification()">Submit for Verification</button>
+    <div id="serviceSubmitMessage" class="status-message"></div>
+  </div>
+</section>
+</main></div>
+<script>
+
+const cities = ['Delhi','Mumbai','Gurugram','Dehradun','Noida'];
+const data={"Delhi":[["AIIMS New Delhi","Healthcare","Ansari Nagar","Major public hospital and medical institute."],["Safdarjung Hospital","Healthcare","Ansari Nagar West","Government multi-speciality hospital."],["Lok Nayak Hospital","Healthcare","Jawaharlal Nehru Marg","Public hospital in central Delhi."],["Sir Ganga Ram Hospital","Healthcare","Rajinder Nagar","Multi-speciality private hospital."],["Max Super Speciality Hospital","Healthcare","Saket","Private multi-speciality hospital."],["University of Delhi","Education","North Campus","University and education services."],["Delhi Public School, RK Puram","Education","RK Puram","School education."],["Delhi Secretariat","Government","IP Estate","Government administration."],["New Delhi Railway Station","Transport","Paharganj","Railway travel connection."],["Indira Gandhi International Airport","Transport","Palam","Airport and passenger services."],["Connaught Place Market","Shopping","Connaught Place","Shopping and local businesses."],["India Gate","Recreation","Kartavya Path","Public landmark and open area."],["Blue Tokai Coffee Roasters","Cafe","Saket","Coffee shop."],["Indian Coffee House","Cafe","Connaught Place","Cafe and casual dining."],["Social","Cafe","Hauz Khas","Cafe and restaurant."],["Lodhi Garden","Park","Lodhi Road","Public garden and walking paths."],["Deer Park","Park","Hauz Khas","Urban park."],["Hazrat Nizamuddin Railway Station","Transport","Nizamuddin","Railway station."],["Kashmere Gate Metro Station","Transport","Kashmere Gate","Metro interchange."],["New Delhi Municipal Council Office","Office","Connaught Place","Civic administration office."],["Delhi Police Headquarters","Police Station","ITO","Police administration."],["Connaught Place Police Station","Police Station","Connaught Place","Local police station."],["Delhi Fire Service Station","Fire Station","Connaught Place area","Fire and rescue services."],["Cult.fit Delhi","Gym","Saket","Fitness centre and workout facility"],["Looks Salon Rajouri Garden","Salon","Rajouri Garden","Hair, beauty and grooming services"],["SPM Swimming Pool Complex","Swimming Pool","Talkatora","Public swimming and aquatic training facility"],["Chelvies Coffee CP","Cafe","Connaught Place","Coffee, snacks and casual dining"],["Ambience Mall Vasant Kunj","Mall","Vasant Kunj","Shopping, dining and entertainment"]],"Mumbai":[["KEM Hospital","Healthcare","Parel","Public teaching and multi-speciality hospital."],["Sion Hospital","Healthcare","Sion","Public hospital and medical college."],["Tata Memorial Hospital","Healthcare","Parel","Specialist cancer care hospital."],["Lilavati Hospital","Healthcare","Bandra West","Private multi-speciality hospital."],["Kokilaben Dhirubhai Ambani Hospital","Healthcare","Andheri West","Private multi-speciality hospital."],["University of Mumbai","Education","Fort","University and education services."],["St. Xavier’s College","Education","Fort","Higher education."],["Mantralaya","Government","Nariman Point","Maharashtra state administration."],["Chhatrapati Shivaji Maharaj Terminus","Transport","Fort","Major railway station."],["Chhatrapati Shivaji Maharaj International Airport","Transport","Santacruz","Airport and passenger services."],["Crawford Market","Shopping","Fort","Market and local shops."],["Marine Drive","Recreation","South Mumbai","Waterfront promenade."],["Leopold Cafe","Cafe","Colaba","Cafe and restaurant."],["Prithvi Cafe","Cafe","Juhu","Cafe near Prithvi Theatre."],["Cafe Madras","Cafe","Matunga","South Indian cafe."],["Sanjay Gandhi National Park","Park","Borivali","Large urban national park."],["Shivaji Park","Park","Dadar","Public park."],["Dadar Railway Station","Transport","Dadar","Major railway station."],["Andheri Metro Station","Transport","Andheri","Metro station."],["BMC Headquarters","Office","Fort","Municipal corporation office."],["Mumbai Police Headquarters","Police Station","Fort","Police administration."],["Colaba Police Station","Police Station","Colaba","Local police station."],["Mumbai Fire Brigade Headquarters","Fire Station","Byculla","Fire and rescue services."],["Waves Gym","Gym","Andheri West","Fitness, strength training and personal training"],["Enrich Salon Mumbai","Salon","Andheri","Hair, beauty and grooming services"],["BMC Swimming Pool","Swimming Pool","Worli","Public swimming facility"],["Third Wave Coffee Mumbai","Cafe","Bandra","Coffee, snacks and casual dining"],["Phoenix Marketcity","Mall","Kurla","Shopping, dining and entertainment"]],"Gurugram":[["Medanta – The Medicity","Healthcare","Sector 38","Multi-speciality hospital."],["Fortis Memorial Research Institute","Healthcare","Sector 44","Multi-speciality hospital."],["Artemis Hospital","Healthcare","Sector 51","Multi-speciality hospital."],["Civil Hospital Gurugram","Healthcare","Civil Lines","Public hospital."],["Paras Health","Healthcare","Sector 43","Multi-speciality hospital."],["The NorthCap University","Education","Sector 23A","University and education services."],["Government College for Girls","Education","Sector 14","Higher education."],["Mini Secretariat Gurugram","Government","Civil Lines","District administration services."],["Gurugram Railway Station","Transport","Railway Road","Railway travel connection."],["Huda City Centre Metro Station","Transport","Sector 29","Metro travel connection."],["Ambience Mall","Shopping","NH-8","Shopping and dining."],["Leisure Valley Park","Recreation","Sector 29","Public park and recreation."],["Starbucks Cyber Hub","Cafe","DLF Cyber City","Coffee shop."],["Third Wave Coffee","Cafe","Sector 29","Cafe and coffee shop."],["Cafe Soul Garden","Cafe","Sector 49","Cafe and restaurant."],["Aravalli Biodiversity Park","Park","MG Road","Urban biodiversity park."],["Tau Devi Lal Biodiversity Park","Park","Sector 52A","Public green space."],["Gurugram Railway Station","Transport","Railway Road","Railway station."],["Millennium City Centre Metro Station","Transport","Sector 29","Metro station."],["Gurugram Civic Centre","Office","Sector 34","Civic services office."],["Gurugram Police Station Sector 29","Police Station","Sector 29","Local police station."],["Sadar Police Station","Police Station","Sadar Bazaar","Local police station."],["Sector 29 Fire Station","Fire Station","Sector 29","Fire and rescue services."],["Cult.fit Gurugram","Gym","Sector 29","Fitness and group workout facility"],["Looks Salon Gurugram","Salon","DLF Phase 4","Hair, beauty and grooming services"],["Tau Devi Lal Sports Complex Pool","Swimming Pool","Sector 38","Sports complex with swimming facilities"],["ZOCA Cafe","Cafe","Airia Mall","Cafe, beverages and casual dining"],["Ambience Mall Gurugram","Mall","DLF Phase 3","Shopping, dining and entertainment"]],"Dehradun":[["Government Doon Medical College Hospital","Healthcare","Patel Nagar","Government teaching hospital."],["Max Super Speciality Hospital","Healthcare","Mussoorie Diversion Road","Private multi-speciality hospital."],["Shri Mahant Indiresh Hospital","Healthcare","Patel Nagar","Multi-speciality hospital."],["Graphic Era Hospital","Healthcare","Clement Town","Hospital services near the university area."],["AIIMS Rishikesh","Healthcare","Rishikesh","Tertiary-care hospital in the wider region."],["Graphic Era University","Education","Clement Town","Higher education and campus services."],["Doon University","Education","Kedarpur","University and education services."],["Collectorate Dehradun","Government","Court Road","District administration services."],["Dehradun Railway Station","Transport","Railway Station Road","Railway travel connection."],["Jolly Grant Airport","Transport","Doiwala","Airport and passenger services."],["Paltan Bazaar","Shopping","Clock Tower area","Shopping and local businesses."],["Gandhi Park","Recreation","Rajpur Road","Public park and recreation."],["Cafe Cibo","Cafe","Rajpur Road","Cafe and casual dining."],["Ellora’s Melting Moments Cafe","Cafe","Rajpur Road","Cafe and bakery."],["The Great Indian Pub Cafe","Cafe","Jakhan","Cafe and restaurant."],["Malsi Deer Park","Park","Mussoorie Road","Wildlife park and green space."],["MDDA Park","Park","Rajpur Road","Public park."],["Harrawala Railway Station","Transport","Harrawala","Railway station."],["ISBT Dehradun","Transport","Saharanpur Road","Interstate bus terminal."],["Dehradun Municipal Corporation Office","Office","Race Course","Municipal office."],["Dehradun Police Station","Police Station","City centre","Local police station."],["Dalanwala Police Station","Police Station","Dalanwala","Local police station."],["Dehradun Fire Station","Fire Station","City centre","Fire and rescue services."],["Anytime Fitness Dehradun","Gym","Rajpur Road","Fitness and strength training facility"],["Looks Salon Centrio Mall","Salon","Centrio Mall","Hair, beauty and grooming services"],["Parade Ground Swimming Pool","Swimming Pool","Race Course","Swimming and aquatic training facility"],["Cafe de Piccolo","Cafe","Rajpur Road","Coffee, snacks and casual dining"],["Pacific Mall Dehradun","Mall","Jakhan","Shopping, dining and entertainment"]],"Noida":[["Fit No Fit Gym","Gym","Sector 49","Gym and fitness training facility"],["URBAN FITNESS ZONE","Gym","Sector 102","Coach-led gym and fitness facility"],["Fitvilla Sector 76","Gym","Sector 76","Premium gym with cardio, strength, recovery and group classes"],["Gold’s Gym Noida Sector 30","Gym","Sector 30","Fitness centre with professional training and equipment"],["Looks Salon Noida Sector 128","Salon","Sector 128","Hair, beauty and grooming services"],["Lakmé Salon Sector 18","Salon","Sector 18","Hair, skin, makeup and beauty services"],["Fitso Sector 70 Sapphire","Swimming Pool","Sector 70","Indoor swimming and coached swim facility"],["Fitso Sector 51 LPS Swimming","Swimming Pool","Sector 51","Swimming and coached swim-school facility"],["Club 26 Swimming Pool","Swimming Pool","Sector 26","Club swimming pool and aquatic facility"],["Habidade","Cafe","Sector 104","Cafe, coffee and casual dining"],["Roastery Coffee House","Cafe","Sector 144","Specialty coffee and all-day dining"],["KOKOY Noida","Cafe","Sector 144","All-day cafe, breakfast, coffee and dining"],["THEOS Sector 41","Cafe","Sector 41","Cafe, bakery, patisserie and Italian/global food"],["DLF Mall of India","Mall","Sector 18","Large shopping and entertainment mall"],["The Great India Place","Mall","Sector 38","Shopping, restaurants, cinema and entertainment"],["Dsquare Food Mall","Mall","Sector 63","Food and entertainment mall"]]}
+const roadConditions = {};
+cities.forEach(city => {
+  roadConditions[city] = [
+    {name:'Central Road', distance:5, traffic:'Moderate', condition:'Good', closed:false},
+    {name:'Market Road', distance:3, traffic:'High', condition:'Fair', closed:false},
+    {name:'Ring Road', distance:7, traffic:'Low', condition:'Good', closed:false}
+  ];
+});
+
+const cityHeroImages = {"Delhi": "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=2200&q=85", "Mumbai": "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=2200&q=85", "Gurugram": "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=2200&q=85", "Dehradun": "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=2200&q=85", "Noida": "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=2200&q=85"};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('hidden', p.id !== id));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.page === id));
+  if (id === 'services') renderServices();
+  if (id === 'routes') updateRoutePlaces();
+  if (id === 'roads') renderRoads();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.querySelectorAll('.nav button').forEach(btn => {
+  btn.addEventListener('click', () => showPage(btn.dataset.page));
+});
+
+document.getElementById('citySelect').addEventListener('change', () => { populateServiceCategories(); renderServices(); });
+document.getElementById('categorySelect').addEventListener('change', renderServices);
+document.getElementById('searchInput').addEventListener('input', renderServices);
+document.getElementById('routeCity').addEventListener('change', updateRoutePlaces);
+document.getElementById('roadCity').addEventListener('change', renderRoads);
+
+function setHomeCity(city) {
+  if (!cities.includes(city)) city = 'Delhi';
+  document.getElementById('homeCityName').textContent = city;
+  document.getElementById('homeCitySelect').value = city;
+  document.getElementById('homeHero').style.setProperty('--hero-image', `url("${cityHeroImages[city]}&city=${encodeURIComponent(city)}")`);
+  document.getElementById('citySelect').value = city;
+  populateServiceCategories();
+  document.getElementById('categorySelect').value = 'All categories';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('routeCity').value = city;
+  document.getElementById('roadCity').value = city;
+  updateRoutePlaces();
+  renderServices();
+  renderRoads();
+}
+
+function openCategory(category) {
+  showPage('services');
+  document.getElementById('categorySelect').value = category;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('emergencyPanel').classList.add('hidden');
+  renderServices();
+}
+
+function populateServiceCategories() {
+  const city = document.getElementById('citySelect').value;
+  const select = document.getElementById('categorySelect');
+  if (!select) return;
+  const categories = [...new Set((data[city] || []).map(x => x[1]))].sort();
+  const current = select.value;
+  select.innerHTML = '<option value="All categories">All categories</option>' +
+    categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (categories.includes(current)) select.value = current;
+}
+
+function getServiceImage(x) {
+  const exact = {
+    // Noida — each listed service has its own relevant photo.
+    "Fit No Fit Gym": ["https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=85", "Relevant gym photo"],
+    "URBAN FITNESS ZONE": ["https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=900&q=85", "Relevant gym photo"],
+    "Fitvilla Sector 76": ["https://images.unsplash.com/photo-1581009146145-d5f7cb7e2c2b?auto=format&fit=crop&w=900&q=85", "Relevant gym photo"],
+    "Gold’s Gym Noida Sector 30": ["https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=900&q=85", "Relevant gym photo"],
+
+    "Looks Salon Noida Sector 128": ["https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=900&q=85", "Relevant salon photo"],
+    "Lakmé Salon Sector 18": ["https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=85", "Relevant salon photo"],
+
+    "Fitso Sector 70 Sapphire": ["https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=900&q=85", "Relevant swimming-pool photo"],
+    "Fitso Sector 51 LPS Swimming": ["https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=900&q=85", "Relevant swimming-pool photo"],
+    "Club 26 Swimming Pool": ["https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?auto=format&fit=crop&w=900&q=85", "Relevant swimming-pool photo"],
+
+    "Habidade": ["https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=900&q=85", "Relevant cafe photo"],
+    "Roastery Coffee House": ["https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=900&q=85", "Relevant cafe photo"],
+    "KOKOY Noida": ["https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=900&q=85", "Relevant cafe photo"],
+    "THEOS Sector 41": ["https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85", "Relevant cafe photo"],
+
+    "DLF Mall of India": ["https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=900&q=85", "Relevant mall photo"],
+    "The Great India Place": ["https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=900&q=85", "Relevant shopping-mall photo"],
+    "Dsquare Food Mall": ["https://images.unsplash.com/photo-1567449303078-57ad995bd17f?auto=format&fit=crop&w=900&q=85", "Relevant food-mall photo"],
+
+    // Existing exact/relevant photos for other cities.
+    "AIIMS New Delhi": ["https://commons.wikimedia.org/wiki/Special:Redirect/file/AIIMS%20DELHI%20Building.jpg", "Wikimedia Commons"],
+    "KEM Hospital": ["https://commons.wikimedia.org/wiki/Special:Redirect/file/KEM%20HOSPITAL%20%281%29.JPG", "Wikimedia Commons"],
+    "Medanta – The Medicity": ["https://commons.wikimedia.org/wiki/Special:Redirect/file/Medanta%20The%20Medicity.jpg", "Wikimedia Commons"],
+    "Tata Memorial Hospital": ["https://commons.wikimedia.org/wiki/Special:Redirect/file/Tata%20Memorial%20Hospital.jpg", "Wikimedia Commons"],
+    "Graphic Era University": ["https://commons.wikimedia.org/wiki/Special:Redirect/file/Graphic_Era_University.jpg", "Wikimedia Commons"]
+  };
+
+  const fallback = {
+    "Healthcare":"https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=80",
+    "Cafe":"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=900&q=80",
+    "Education":"https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=80",
+    "Park":"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80",
+    "Transport":"https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=900&q=80",
+    "Office":"https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80",
+    "Police Station":"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80",
+    "Fire Station":"https://images.unsplash.com/photo-1541560052-77ec1bbc09f7?auto=format&fit=crop&w=900&q=80",
+    "Shopping":"https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80",
+    "Recreation":"https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=900&q=80",
+    "Mall":"https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=900&q=80",
+    "Swimming Pool":"https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=900&q=80",
+    "Salon":"https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=900&q=80",
+    "Gym":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=80"
+  };
+  if (exact[x[0]]) return {url:exact[x[0]][0], credit:exact[x[0]][1], exact:true};
+  return {url:fallback[x[1]] || fallback.Office, credit:'Relevant category photo • Unsplash', exact:false};
+}
+
+
+window.CITYFLOW_PHOTO_POOLS = {"Gym": ["https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1581009146145-d5f7cb7e2c2b?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=80", "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1584467735871-3e5b2a6d2e3b?auto=format&fit=crop&w=900&q=85"], "Salon": ["https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=900&q=85"], "Swimming Pool": ["https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1600965962361-9035dbfd1c50?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1560089000-7433a4ebbd64?auto=format&fit=crop&w=900&q=85"], "Cafe": ["https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=900&q=85"], "Mall": ["https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1567449303078-57ad995bd17f?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=900&q=85", "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=85"]};
+
+function getServiceGallery(x) {
+  const pools = window.CITYFLOW_PHOTO_POOLS || {};
+  const pool = pools[x[1]] || [];
+  if (!pool.length) return [];
+  const seed = x[0].split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const picked = [];
+  for (let i=0; i<pool.length && picked.length<4; i++) {
+    const url = pool[(seed + i * 3) % pool.length];
+    if (!picked.includes(url)) picked.push(url);
+  }
+  return picked;
+}
+
+function getServiceContact(x) {
+  const overrides = {
+    "Fit No Fit Gym": {phone:"09911710105", email:"Not provided", hours:"Mon–Sun, 4:00 AM–11:00 PM", days:"Monday–Sunday"},
+    "URBAN FITNESS ZONE": {phone:"+91 99996 66507", email:"Not provided", hours:"Mon–Sat, 5:00–11:00 AM & 5:00–10:00 PM", days:"Monday–Saturday"},
+    "Fitvilla Sector 76": {phone:"+91 84485 19333", email:"contact@fitvilla.in", hours:"Mon–Sat, 5:00 AM–11:00 PM; Sun, 8:00 AM–8:00 PM", days:"Monday–Sunday"},
+    "Gold’s Gym Noida Sector 30": {phone:"9540410606 / 9540410707", email:"goldsgymsector30noida@gmail.com", hours:"Mon–Sat, 6:00 AM–10:00 PM; Sun, 9:00 AM–8:00 PM", days:"Monday–Sunday"},
+    "Looks Salon Noida Sector 128": {phone:"+91 98106 54310", email:"Not provided", hours:"10:00 AM–9:00 PM daily", days:"Monday–Sunday"},
+    "Lakmé Salon Sector 18": {phone:"+91 79 4746 8217", email:"Not provided", hours:"10:00 AM–8:00 PM daily", days:"Monday–Sunday"},
+    "Fitso Sector 70 Sapphire": {phone:"+91 11 6119 5847", email:"Not provided", hours:"Morning/evening coached sessions; check current schedule", days:"Tuesday–Sunday sessions listed"},
+    "Fitso Sector 51 LPS Swimming": {phone:"+91 11 6119 5851", email:"Not provided", hours:"6:00–7:00 AM & 4:00–8:00 PM on listed session days", days:"Monday, Tuesday, Wednesday, Thursday, Saturday"},
+    "Club 26 Swimming Pool": {phone:"Not provided", email:"Not provided", hours:"Adults: 6:00–10:00 AM & 5:30–9:30 PM; children: 6:00–10:00 AM & 5:30–8:00 PM", days:"Timings vary; check club schedule"},
+    "Habidade": {phone:"+91 87997 79389", email:"Not provided", hours:"Mon/Tue 11:00 AM–11:00 PM; Wed–Sun 10:00 AM–11:30 PM", days:"Monday–Sunday"},
+    "Roastery Coffee House": {phone:"+91 89296 49344", email:"Not provided", hours:"8:00 AM–11:00 PM daily", days:"Monday–Sunday"},
+    "KOKOY Noida": {phone:"99586 85219", email:"Not provided", hours:"8:00 AM–11:00 PM daily; Fri–Sun until 12:00 AM", days:"Monday–Sunday"},
+    "THEOS Sector 41": {phone:"+91 87502 52225", email:"Not provided", hours:"9:00 AM–11:30 PM daily", days:"Monday–Sunday"},
+    "DLF Mall of India": {phone:"+91 120 620 9971", email:"Not provided", hours:"11:00 AM–11:00 PM daily", days:"Monday–Sunday"},
+    "The Great India Place": {phone:"+91 120 465 0300", email:"Not provided", hours:"11:00 AM–10:00 PM daily", days:"Monday–Sunday"},
+    "Dsquare Food Mall": {phone:"+91 120 448 1757", email:"contact@dsquaremall.com", hours:"8:00 AM–11:00 PM", days:"Monday–Saturday"},
+    "AIIMS New Delhi": {phone:"011-26588500", email:"hospital@aiims.edu", hours:"Open 24 hours", days:"All days"},
+    "Safdarjung Hospital": {phone:"011-26707444", email:"Not provided", hours:"Open 24 hours", days:"All days"},
+    "KEM Hospital": {phone:"022-24107000", email:"Not provided", hours:"Open 24 hours", days:"All days"},
+    "Tata Memorial Hospital": {phone:"022-24177000", email:"info@tmc.gov.in", hours:"Open 24 hours", days:"All days"},
+    "Medanta – The Medicity": {phone:"0124-4141414", email:"info@medanta.org", hours:"Open 24 hours", days:"All days"},
+    "Government Doon Medical College Hospital": {phone:"0135-2722422", email:"Not provided", hours:"Open 24 hours", days:"All days"},
+    "Graphic Era University": {phone:"1800-180-4270", email:"info@geu.ac.in", hours:"Mon–Sat, 9:00 AM–5:00 PM", days:"Monday–Saturday"}
+  };
+  return overrides[x[0]] || {phone:'Not provided', email:'Not provided', hours:'Not provided', days:'Not provided'};
+}
+
+function showServiceDetail(city, index) {
+  const x = (data[city] || [])[index];
+  const d = document.getElementById('serviceDetail');
+  if (!x || !d) return;
+  const c = getServiceContact(x);
+  const im = getServiceImage(x);
+  const phoneHtml = /\d/.test(c.phone) ? `<a href="tel:${c.phone.replace(/[^0-9+]/g,'')}">${c.phone}</a>` : c.phone;
+  const emailHtml = c.email.includes('@') ? `<a href="mailto:${c.email}">${c.email}</a>` : c.email;
+  d.classList.remove('hidden');
+  d.innerHTML = `<div class="eyebrow">Service details</div>
+    <div class="service-gallery-detail">
+      ${[im.url, ...getServiceGallery(x).filter(u=>u!==im.url)].slice(0,4).map((u,i)=>`<img src="${u}" alt="${x[0]} photo ${i+1}" loading="lazy" onerror="this.style.display='none'">`).join('')}
+    </div>
+    <div class="photo-label">${im.credit}${im.exact?'':' • category image'} • photo gallery</div>
+    <h3>${x[0]}</h3>
+    <div class="detail-row"><b>Category</b><span>${x[1]}</span></div>
+    <div class="detail-row"><b>Area</b><span>${x[2]}</span></div>
+    <div class="detail-row"><b>City</b><span>${city}</span></div>
+    <div class="detail-row"><b>Information</b><span>${x[3]}</span></div>
+    <div class="contact-grid">
+      <div class="contact-item"><b>📞 Phone</b><span>${phoneHtml}</span></div>
+      <div class="contact-item"><b>✉ Email</b><span>${emailHtml}</span></div>
+      <div class="contact-item"><b>🕒 Opening Hours</b><span>${c.hours}</span></div>
+      <div class="contact-item"><b>📅 Working Days</b><span>${c.days}</span></div>
+    </div>
+    <p class="contact-note">Only supplied/verified values are shown. “Not provided” means CityFlow does not have a verified value for that field.</p>`;
+  d.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function renderServices() {
+  const city = document.getElementById('citySelect').value;
+  populateServiceCategories();
+  const category = document.getElementById('categorySelect').value || 'All categories';
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  const source = data[city] || [];
+  const filtered = source.filter(x =>
+    (category === 'All categories' || x[1] === category) &&
+    (!query || x.join(' ').toLowerCase().includes(query))
+  );
+  document.getElementById('servicesHeading').textContent = `${filtered.length} ${category === 'All categories' ? 'services' : category.toLowerCase() + ' services'} in ${city}`;
+  document.getElementById('serviceDetail').classList.add('hidden');
+  document.getElementById('serviceGrid').innerHTML = filtered.length ? filtered.map(x => {
+    const realIndex = source.indexOf(x);
+    const im = getServiceImage(x);
+    return `<article class="card service-card">
+      <div class="service-photo-wrap">
+        <div class="service-gallery">
+          ${[im.url, ...getServiceGallery(x).filter(u=>u!==im.url)].slice(0,4).map((u,i)=>`<img src="${u}" alt="${x[0]} photo ${i+1}" loading="lazy" onerror="this.style.display='none'">`).join('')}
+        </div>
+        <div class="photo-label">${im.credit}${im.exact?'':' • category image'} • 4-photo gallery</div>
+      </div>
+      <span class="badge">${x[1]}</span><h3>${x[0]}</h3><p class="muted">${x[3]}</p>
+      <div class="meta">⌖ &nbsp;${x[2]}, ${city}</div>
+      <button class="btn" style="margin-top:12px" onclick="showServiceDetail('${city}',${realIndex})">View details</button>
+    </article>`;
+  }).join('') : '<div class="empty">No matching services in this city. Try another category or search.</div>';
+}
+
+function submitServiceForVerification() {
+  const fields = {
+    name: document.getElementById('submitServiceName').value.trim(),
+    category: document.getElementById('submitServiceCategory').value,
+    city: document.getElementById('submitServiceCity').value.trim(),
+    area: document.getElementById('submitServiceArea').value.trim(),
+    email: document.getElementById('submitServiceEmail').value.trim(),
+    hours: document.getElementById('submitServiceHours').value.trim(),
+    contact: document.getElementById('submitServiceContact').value.trim(),
+    documentType: document.getElementById('submitDocumentType').value,
+    documentFile: document.getElementById('submitDocument').files[0],
+    declaration: document.getElementById('documentDeclaration').checked
+  };
+  const msg = document.getElementById('serviceSubmitMessage');
+
+  if (!fields.name || !fields.city || !fields.area || !fields.email || !fields.hours ||
+      !fields.contact || !fields.documentType || !fields.documentFile || !fields.declaration) {
+    msg.classList.remove('hidden');
+    msg.textContent = 'Please complete every required field, upload a document, and accept the declaration.';
+    return;
+  }
+
+  const allowed = ['application/pdf','image/jpeg','image/png'];
+  if (!allowed.includes(fields.documentFile.type)) {
+    msg.classList.remove('hidden');
+    msg.textContent = 'Only PDF, JPG/JPEG or PNG documents are accepted.';
+    return;
+  }
+
+  msg.classList.remove('hidden');
+  msg.textContent = 'Submitted for verification. The service is NOT added to the public directory until the documentation is reviewed and marked valid.';
+}
+
+function openEmergency() {
+  showPage('services');
+  const city = document.getElementById('citySelect').value;
+  document.getElementById('categorySelect').value = 'All categories';
+  document.getElementById('searchInput').value = '';
+
+  const emergency = (data[city] || []).filter(x =>
+    ['Healthcare','Police Station','Fire Station'].includes(x[1])
+  );
+
+  document.getElementById('emergencyPanel').classList.remove('hidden');
+  document.getElementById('emergencyCityLabel').textContent = city;
+
+  document.getElementById('emergencyGrid').innerHTML = emergency.length ? emergency.map(x => {
+    const im = getServiceImage(x);
+    const idx = data[city].indexOf(x);
+    return `<article class="card service-card">
+      <div class="service-photo-wrap">
+        <img class="service-photo" src="${im.url}" alt="${x[0]}" loading="lazy"
+             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80'">
+        <div class="photo-label">${im.credit}</div>
+      </div>
+      <span class="badge">${x[1]}</span>
+      <h3>${x[0]}</h3>
+      <p class="muted">${x[3]}</p>
+      <div class="meta">⌖ &nbsp;${x[2]}, ${city}</div>
+      <button class="btn" style="margin-top:12px" onclick="showServiceDetail('${city}',${idx})">View details</button>
+    </article>`;
+  }).join('') : '<div class="empty">No emergency services listed for this city.</div>';
+}
+
+function getDemoDirections(city, from, to, route) {
+  const roadSets = {
+    Delhi:['Central Road','Ring Road','Market Road'], Mumbai:['Central Road','Ring Road','Market Road'],
+    Gurugram:['Central Road','Ring Road','Market Road'], Dehradun:['Central Road','Ring Road','Market Road'],
+    Noida:['Central Road','Ring Road','Market Road']
+  };
+  const roads = roadSets[city] || ['Central Road','Ring Road','Market Road'];
+  const primary = route.road === 'Good' ? roads[1] : roads[0];
+  const finalRoad = route.traffic === 'High' ? roads[1] : roads[2];
+  return [
+    {action:`Start from ${from}.`, detail:`Head toward ${primary}. Follow the route selected by CityFlow.`},
+    {action:`Continue on ${primary}.`, detail:`Stay on this road while CityFlow accounts for the current demo traffic and road-condition score.`},
+    {action:`At the next major junction, take the ${route.road === 'Poor' ? 'clearer alternative' : 'recommended'} road.`, detail:`This is where the route can differ from the shortest-distance option.`},
+    {action:`Continue toward ${finalRoad}.`, detail:`${route.traffic === 'Low' ? 'Traffic is low on this option.' : route.traffic === 'Moderate' ? 'Traffic is moderate, so allow some extra travel time.' : 'Traffic is high on this option; this is reflected in the route score.'}`},
+    {action:`Arrive at ${to}.`, detail:`Estimated demo distance: ${route.km} km; estimated demo time: ${route.time} minutes.`}
+  ];
+}
+
+function updateRoutePlaces() {
+  const city = document.getElementById('routeCity').value;
+  const names = (data[city] || []).map(x => x[0]);
+  ['routeFrom','routeTo'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    const old = el.value;
+    el.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+    if (old && names.includes(old)) el.value = old;
+    else if (names.length) el.selectedIndex = i ? Math.min(1, names.length - 1) : 0;
+  });
+}
+
+function planRoute() {
+  const city = document.getElementById('routeCity').value;
+  const from = document.getElementById('routeFrom').value;
+  const to = document.getElementById('routeTo').value;
+  const mode = document.getElementById('routeMode').value;
+  const result = document.getElementById('routeResult');
+
+  if (!from || !to || from === to) {
+    result.innerHTML = '<h3>Choose two different places</h3><p class="muted">Select a different start and destination.</p>';
+    return;
+  }
+
+  let seed = 0;
+  for (const ch of `${from}|${to}|${city}`) seed = (seed + ch.charCodeAt(0)) % 97;
+  const shortest = 4 + (seed % 6);
+
+  const routes = [
+    {name:'Shortest route', km:shortest, traffic:['High','Moderate','Low'][seed%3], road:['Fair','Poor','Good'][(seed+1)%3]},
+    {name:'Balanced route', km:shortest+1, traffic:['Low','Moderate','High'][(seed+1)%3], road:['Good','Fair','Poor'][(seed+2)%3]},
+    {name:'Alternative route', km:shortest+2, traffic:['Moderate','Low','High'][(seed+2)%3], road:['Fair','Good','Poor'][seed%3]}
+  ];
+
+  const roads = roadConditions[city] || [];
+  const closed = roads.some(r => r.closed);
+
+  const trafficPenalty = v => v === 'Low' ? 0 : v === 'Moderate' ? 8 : 16;
+  const conditionPenalty = v => v === 'Good' ? 0 : v === 'Fair' ? 7 : 14;
+
+  routes.forEach(r => {
+    r.time = Math.round(r.km * (r.traffic === 'Low' ? 2.2 : r.traffic === 'Moderate' ? 3 : 4));
+    r.score = r.km * 4 + trafficPenalty(r.traffic) + conditionPenalty(r.road);
+    if (closed && r.name === 'Shortest route') r.score += 12;
+
+    if (mode === 'shortest') r.rankScore = r.km * 100 + r.score * 0.01;
+    else if (mode === 'fastest') r.rankScore = r.time * 10 + r.score * 0.01;
+    else if (mode === 'traffic') r.rankScore = trafficPenalty(r.traffic) * 20 + r.score * 0.01;
+    else if (mode === 'condition') r.rankScore = conditionPenalty(r.road) * 20 + r.score * 0.01;
+    else r.rankScore = r.score;
+  });
+
+  const best = routes.reduce((a,b) => a.rankScore <= b.rankScore ? a : b);
+  const modeLabel = {
+    balanced:'Best overall',
+    fastest:'Fastest',
+    shortest:'Shortest distance',
+    traffic:'Avoid traffic',
+    condition:'Best road condition'
+  }[mode];
+
+  const cards = routes.map((r, i) => {
+    const recommended = r === best;
+    const conditionColor = r.road === 'Good' ? '#15803d' : r.road === 'Fair' ? '#b45309' : '#b91c1c';
+    return `<article class="route-option ${recommended ? 'recommended' : ''}">
+      ${recommended ? '<span class="route-tag best">★ CITYFLOW RECOMMENDS</span>' : `<span class="route-tag">OPTION ${i+1}</span>`}
+      <h4>${r.name}</h4>
+      <div class="route-metrics">
+        <div class="route-metric"><small>Distance</small><b>${r.km} km</b></div>
+        <div class="route-metric"><small>Est. time</small><b>${r.time} min</b></div>
+        <div class="route-metric"><small>Traffic</small><b>${r.traffic}</b></div>
+        <div class="route-metric"><small>Road quality</small><b style="color:${conditionColor}">${r.road}</b></div>
+      </div>
+      <p class="muted">${recommended ? `Selected for ${modeLabel.toLowerCase()}.` : 'Available alternative for comparison.'}</p>
+      <small class="muted">Base score: ${r.score.toFixed(1)} · Selection score: ${r.rankScore.toFixed(1)}</small>
+    </article>`;
+  }).join('');
+
+  result.innerHTML = `<span class="badge">${city}</span>
+    <h3>All route options</h3>
+    <p><b>From:</b> ${from}<br><b>To:</b> ${to}<br><b>Preference:</b> ${modeLabel}</p>
+    <div class="route-options">${cards}</div>
+    <div class="result">
+      <b>Recommended route:</b> ${best.name}<br>
+      <b>Why?</b> The recommendation is based on the selected preference and the demo distance, traffic and road-condition scores.
+      <div class="route-directions" style="margin-top:16px">
+        <div class="eyebrow">Your way</div>
+        <h3 style="margin:4px 0 10px">Step-by-step directions</h3>
+        <ol class="direction-list">
+          ${getDemoDirections(city, from, to, best).map((step, idx) => `<li><span class="step-number">${idx+1}</span><div><b>${step.action}</b><div class="muted">${step.detail}</div></div></li>`).join('')}
+        </ol>
+        <p class="muted" style="margin:10px 0 0">These directions are generated from CityFlow's demo road graph. They are not live turn-by-turn GPS instructions.</p>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn primary" onclick="openGoogleMaps('${encodeURIComponent(from)}','${encodeURIComponent(to)}','${encodeURIComponent(city)}')">🗺️ Open this trip in Google Maps</button>
+        <p class="muted" style="margin:8px 0 0">Google Maps provides its own live navigation after opening the trip.</p>
+      </div>
+    </div>
+    <div class="notice" style="margin-top:16px">Demo limitation: route distances, times, traffic and scores are simulated sample data.</div>`;
+}
+
+function openGoogleMaps(encodedFrom, encodedTo, encodedCity) {
+  const from = decodeURIComponent(encodedFrom);
+  const to = decodeURIComponent(encodedTo);
+  const city = decodeURIComponent(encodedCity);
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from+', '+city)}&destination=${encodeURIComponent(to+', '+city)}&travelmode=driving`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function renderRoads() {
+  const city = document.getElementById('roadCity').value;
+  const roads = roadConditions[city] || [];
+  const open = roads.filter(r => !r.closed).length;
+  const high = roads.filter(r => r.traffic === 'High').length;
+  const closed = roads.filter(r => r.closed).length;
+
+  document.getElementById('roadSummary').innerHTML = `
+    <div class="stat"><span>Open roads</span><strong>${open}</strong><small>Available in demo network</small></div>
+    <div class="stat"><span>High traffic</span><strong>${high}</strong><small>Needs attention</small></div>
+    <div class="stat"><span>Closed roads</span><strong>${closed}</strong><small>Excluded from routing</small></div>`;
+
+  document.getElementById('roadsList').innerHTML = roads.map((r,i) => `
+    <div class="road-row">
+      <div><b>${r.name}</b><div class="muted">${r.distance} km sample segment</div></div>
+      <label class="muted">Traffic<br><select class="select" onchange="updateRoad('${city}',${i},'traffic',this.value)">
+        <option ${r.traffic==='Low'?'selected':''}>Low</option>
+        <option ${r.traffic==='Moderate'?'selected':''}>Moderate</option>
+        <option ${r.traffic==='High'?'selected':''}>High</option>
+      </select></label>
+      <label class="muted">Condition<br><select class="select" onchange="updateRoad('${city}',${i},'condition',this.value)">
+        <option ${r.condition==='Good'?'selected':''}>Good</option>
+        <option ${r.condition==='Fair'?'selected':''}>Fair</option>
+        <option ${r.condition==='Poor'?'selected':''}>Poor</option>
+      </select></label>
+      <label class="muted"><input type="checkbox" ${r.closed?'checked':''} onchange="updateRoad('${city}',${i},'closed',this.checked)"> Closed</label>
+      <button class="btn" onclick="submitRoadReport('${city}',${i})">Report update</button>
+    </div>`).join('');
+  updateDashboard();
+}
+
+function updateRoad(city, i, key, value) {
+  roadConditions[city][i][key] = value;
+  renderRoads();
+}
+
+function submitRoadReport(city, i) {
+  const road = roadConditions[city][i];
+  alert(`Road update recorded for ${road.name} in ${city}.\\nTraffic: ${road.traffic}\\nCondition: ${road.condition}\\nClosed: ${road.closed ? 'Yes' : 'No'}\\n\\nThis is a demo report stored only in this browser session.`);
+}
+
+function updateDashboard() {
+  const city = document.getElementById('roadCity')?.value || 'Delhi';
+  const roads = roadConditions[city] || [];
+  document.getElementById('dashOpenRoads').textContent = roads.filter(r=>!r.closed).length;
+  document.getElementById('dashHighTraffic').textContent = roads.filter(r=>r.traffic==='High').length;
+  document.getElementById('dashClosedRoads').textContent = roads.filter(r=>r.closed).length;
+}
+
+function updateOverviewStats() {
+  const all = cities.flatMap(c => data[c] || []);
+  document.getElementById('statServices').textContent = all.length;
+  document.getElementById('statCategories').textContent = new Set(all.map(x=>x[1])).size;
+}
+
+document.querySelectorAll('.nav button[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    showPage(page);
+    if (page === 'add-service') {
+      const home = document.getElementById('homeCitySelect');
+      const city = document.getElementById('submitServiceCity');
+      if (city) city.value = home && home.value ? home.value : 'Delhi';
+    }
+  });
+});
+
+document.getElementById('homeCitySelect').addEventListener('change', e => setHomeCity(e.target.value));
+document.getElementById('citySelect').addEventListener('change', renderServices);
+document.getElementById('categorySelect').addEventListener('change', renderServices);
+document.getElementById('searchInput').addEventListener('input', renderServices);
+document.getElementById('routeCity').addEventListener('change', updateRoutePlaces);
+document.getElementById('routeMode').addEventListener('change', planRoute);
+document.getElementById('roadCity').addEventListener('change', renderRoads);
+
+updateOverviewStats();
+setHomeCity('Delhi');
+renderServices();
+renderRoads();
+updateRoutePlaces();
+
+
+populateServiceCategories();
+updateRoutePlaces();
+renderServices();
+renderRoads();
+</script>
+
+
+
+
+
+
+
+
+
+</body>
+</html>
